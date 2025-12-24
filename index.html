@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz da Família</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .photo-container {
+            position: relative;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .photo-container img {
+            max-width: 100%;
+            max-height: 450px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .person-markers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .person-marker {
+            background: #dad0ff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            min-width: 150px;
+            text-align: center;
+            border: 3px solid transparent;
+        }
+
+        .person-marker:hover:not(.answered) {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .person-marker.selected {
+            border-color: #667eea;
+            background: #e8ebff;
+        }
+
+        .person-marker.correct {
+            background: #4ade80;
+            color: white;
+            cursor: default;
+        }
+
+        .person-marker.incorrect {
+            background: #f87171;
+            color: white;
+            cursor: default;
+        }
+
+        .person-marker.skipped {
+            background: #fbbf24;
+            color: white;
+            cursor: default;
+        }
+
+        .person-marker.answered {
+            cursor: default;
+        }
+
+        .person-marker .status {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="text"]:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .question-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .next-button {
+            display: block;
+            margin: 20px auto 0;
+            background: #4ade80;
+        }
+
+        .next-button:hover {
+            background: #22c55e;
+        }
+
+        .final-screen {
+            text-align: center;
+        }
+
+        .final-screen h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #4ade80;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .message {
+            font-size: 1.3em;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        .restart-button {
+            margin-top: 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .skip-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .skip-warning h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .skip-warning p {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .skip-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .skip-buttons button {
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz da família Lessa</h1>
+        <p class="subtitle">Quem são as pessoas da foto?</p>
+
+        <div id="gameScreen">
+            <div class="score">Pontuação: <span id="score">0</span></div>
+            <div class="question-info">Foto <span id="currentQuestion">1</span> de <span id="totalQuestions">5</span></div>
+            
+            <div class="photo-container">
+                <img id="photoImage" src="" alt="Foto da família">
+            </div>
+
+            <div class="person-markers" id="personMarkers"></div>
+
+            <p class="instruction" id="instruction">👆 Clique em uma pessoa acima e digite o nome</p>
+
+            <div class="input-container" id="inputContainer">
+                <input type="text" id="nameInput" placeholder="Digite o nome da pessoa...">
+                <button id="submitButton" disabled>Confirmar</button>
+            </div>
+
+            <div class="skip-warning hidden" id="skipWarning">
+                <h3>⚠️ Desistir desta foto?</h3>
+                <p>As respostas corretas serão reveladas para você aprender!</p>
+                <div class="skip-buttons">
+                    <button onclick="cancelarPular()" style="background: #6c757d;">Cancelar</button>
+                    <button onclick="confirmarPular()" style="background: #fbbf24;">Revelar Respostas</button>
+                </div>
+            </div>
+
+            <button class="next-button hidden" id="nextButton">Próxima Foto →</button>
+            <button class="next-button" id="skipButton" style="background: #fbbf24; margin-top: 10px;">Não sei todos - Revelar respostas →</button>
+        </div>
+
+        <div id="finalScreen" class="final-screen hidden">
+            <h2>🎉 Parabéns!</h2>
+            <p class="message">Você completou o quiz!</p>
+            <div class="final-score" id="finalScore">0/0</div>
+            <p class="message" id="finalMessage"></p>
+            <button class="restart-button" onclick="location.reload()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        const galeriaCompleta = [
+            {
+                imagem: "./fotos/vovó.jpg",
+                pessoas: [
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Antônio", "vovô", "vô", "toninho"],
+                ]
+            },
+            {
+                imagem: "./fotos/celina e anderson.jpg",
+                pessoas: [
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Bóris", "Tio Bóris", "boris"],
+                    ["Luana", "Tia Luana", "luana"],
+                    ["Gustavo", "Tio Gustavo", "gustavo"],
+                    ["Celina", "Tia Celina", "celina"],
+                    ["Anderson", "Tio Anderson", "anderson"]
+                ]
+            },
+            {
+                imagem: "./fotos/celma.jpg",
+                pessoas: [
+                    ["Celma", "tia celma", "celma"],
+                    ["Gustavo", "Tio Gustavo", "gustavo"],
+                    ["Jorge", "Pai", "Sogro"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Bóris", "Tio Boris", "boris"],
+                    ["Agnes", "Tia Agnes"]
+                ]
+            },
+            {
+                imagem: "./fotos/dificil.jpg",
+                pessoas: [
+                    ["Vivi", "Viviane"],
+                    ["Maria Helena", "Tia Maria helena"],
+                    ["Luana", "Tia Luana", "luana"],
+                    ["Max", "Tio Max", "maxuel"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Roberto", "Tio Roberto"],
+                    ["Bia","Beatriz"],
+                    ["Icanuza","Tia Icanuza"],
+                    ["Yuri"],
+                    ["Gustavo", "Tio Gustavo"]
+                ]
+            },
+            {
+                imagem: "./fotos/dudu com namorada.jpg",
+                pessoas: [
+                    ["Ricardo", "tio ricardo"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Dudu", "Eduardo"],
+                    ["Namorada do dudu", "namorada do eduardo"],
+                    ["Miguel"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Rosângela", "tia rosângela", "rosangela"],
+                    ["André", "tio andré", "andre"]
+                ]
+            },
+            {
+                imagem: "./fotos/filhos.jpg",
+                pessoas: [
+                    ["Gustavo", "tio gustavo", "gustavo"],
+                    ["Bóris", "tio bóris", "boris"],
+                    ["Luana", "tia luana", "luana"],
+                    ["André", "tio andré", "andre"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Agnes", "tia agnes"],
+                    ["Grázia", "vovó", "vó", "grazia"]
+                ]
+            },
+            {
+                imagem: "./fotos/jovens.jpg",
+                pessoas: [
+                    ["Fátima", "tia fátima", "fatima"],
+                    ["Felipe"],
+                    ["Bia", "Beatriz"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Jorge","Pai","Sogro"],
+                    ["André", "tio andré", "andre"]
+                ]
+            },
+            {
+                imagem: "./fotos/ju e jh.jpg",
+                pessoas: [
+                    ["Julia", "Ju", "Eu"],
+                    ["Jorge Henrique", "Jh", "Jorge"],
+                    ["Jorge", "Pai", "Sogro"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Rosângela", "tia rosângela", "rosangela"],
+                    ["André", "tio andré", "andre"]
+                ]
+            },
+            {
+                imagem: "./fotos/MARIO.jpg",
+                pessoas: [
+                    ["Grazia", "vovó", "vó", "grazia"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Luana", "Tia Luana", "luana"],
+                    ["Lucas", "você", "voce"],
+                    ["Tavinho", "Gustavo"],
+                    ["Jorge Henrique", "Jh", "Jorge"],
+                    ["Gustavo", "Tio Gustavo", "guto"],
+                    ["Celma", "tia celma"],
+                ]
+            },
+            {
+                imagem: "./fotos/mulheres.jpg",
+                pessoas: [
+                    ["Carol", "carolina"],
+                    ["Rosângela", "tia rosângela", "rosangela"],
+                    ["Celina", "tia celina"],
+                    ["Michele", "mãe", "Sogra"],
+                    ["Geusa","geuza"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Singlair", "Mãe da celina", "sinclair", "sincler"],
+                    ["Priscila", "tia priscila"],
+                    ["maria helena", "tia maria helena"],
+                    ["Luana", "tia luana"],
+                    ["Mãe da rosângela","mãe da tia rosângela"],
+                    ["Vivi", "viviane"]
+                ]
+            },
+            {
+                imagem: "./fotos/octogonal.jpg",
+                pessoas: [
+                    ["Singlair", "Mãe da celina", "sinclair", "sincler"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Bia", "Beatriz"],
+                    ["Bóris", "tio bóris", "boris"],
+                    ["Celina", "tia celina"],
+                    ["Viviane", "vivi"],
+                    ["Yuri", "iuri"],
+                    ["Roberto", "tio roberto"],
+                    ["Cadu", "Carlos Eduardo"],
+                    ["Max", "tio max", "maxuel"],
+                    ["Priscila", "tia priscila"],
+                    ["Robertinha", "filha do tio roberto"],
+                    ["Gigi", "Giovana", "Giovanna"],
+                    ["Lenimar"],
+                ]
+            },
+            {
+                imagem: "./fotos/ricardo.jpg",
+                pessoas: [
+                    ["Bárbara", "barbara"],
+                    ["Ricardo", "tio ricardo"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Tavinho", "Gustavo"],
+                    ["Celma", "tia celma"],
+                ]
+            },
+            {
+                imagem: "./fotos/tavinho e suzana.jpg",
+                pessoas: [
+                    ["Taviho", "Gustavo"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Suzana", "susana"]
+                ]
+            },
+            {
+                imagem: "./fotos/amanda.jpeg",
+                pessoas: [
+                    ["Gustavo", "tio gustavo", "gustavo"],
+                    ["Luana", "tia luana"],
+                    ["Celma", "tia celma"],
+                    ["Ricardo", "tio ricardo"],
+                    ["Amanda", "esposa do ricardo"]
+                ]
+            },
+            {
+                imagem: "./fotos/Arthur.jpeg",
+                pessoas: [
+                    ["Robertinha", "filho do tio roberto"],
+                    ["Roberto", "tio roberto"],
+                    ["Esposa do roberto", "mulher do tio roberto"],
+                    ["Andrea", "tia andrea", "andreia"],
+                    ["Arthur", "Tutu", "Artur"],
+                    ["Jorge", "Pai", "Sogro"],
+                    ["Zé", "José", "jose"],
+                    ["carol", "carolina"],
+                    ["Celina", "tia celina"]
+                ]
+            },
+            {
+                imagem: "./fotos/barbara.jpeg",
+                pessoas: [
+                    ["Amanda", "esposa do ricardo"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                    ["Vinícius", "Vini", "vinicius"],
+                    ["Bárbara", "barbara"],
+                    ["Ricardo", "tio ricardo"],
+                    ["Agnes", "tia agnes"]
+                ]
+            },
+            {
+                imagem: "./fotos/lenka.jpeg",
+                pessoas: [
+                    ["Lívia", "livinha", "livia"],
+                    ["lenka", "lenca"],
+                    ["Grázia", "vovó", "vó", "grazia"],
+                ]
+            },
+            {
+                imagem: "./fotos/leo.jpeg",
+                pessoas: [
+                    ["Léo", "leonardo", "leo"],
+                ]
+            },
+        ];
+
+        const FOTOS_POR_RODADA = 5;
+        const EMBARALHAR_FOTOS = true;
+        
+        let fotosParaJogar = [];
+        let fotoAtual = 0;
+        let pontos = 0;
+        let pessoaAtualIndex = null;
+        let respostas = {};
+        let pessoasIdentificadas = [];
+
+        const scoreEl = document.getElementById('score');
+        const currentQuestionEl = document.getElementById('currentQuestion');
+        const totalQuestionsEl = document.getElementById('totalQuestions');
+        const photoImageEl = document.getElementById('photoImage');
+        const personMarkersEl = document.getElementById('personMarkers');
+        const nameInputEl = document.getElementById('nameInput');
+        const submitButtonEl = document.getElementById('submitButton');
+        const nextButtonEl = document.getElementById('nextButton');
+        const skipButtonEl = document.getElementById('skipButton');
+        const skipWarningEl = document.getElementById('skipWarning');
+        const instructionEl = document.getElementById('instruction');
+        const inputContainerEl = document.getElementById('inputContainer');
+        const gameScreenEl = document.getElementById('gameScreen');
+        const finalScreenEl = document.getElementById('finalScreen');
+        const finalScoreEl = document.getElementById('finalScore');
+        const finalMessageEl = document.getElementById('finalMessage');
+
+        function embaralharArray(array) {
+            const novoArray = [...array];
+            for (let i = novoArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [novoArray[i], novoArray[j]] = [novoArray[j], novoArray[i]];
+            }
+            return novoArray;
+        }
+
+        function selecionarFotos() {
+            if (EMBARALHAR_FOTOS) {
+                const fotosEmbaralhadas = embaralharArray(galeriaCompleta);
+                fotosParaJogar = fotosEmbaralhadas.slice(0, Math.min(FOTOS_POR_RODADA, galeriaCompleta.length));
+            } else {
+                fotosParaJogar = galeriaCompleta.slice(0, Math.min(FOTOS_POR_RODADA, galeriaCompleta.length));
+            }
+            
+            totalQuestionsEl.textContent = fotosParaJogar.length;
+        }
+
+        function carregarFoto() {
+            if (fotoAtual >= fotosParaJogar.length) {
+                mostrarResultadoFinal();
+                return;
+            }
+
+            const foto = fotosParaJogar[fotoAtual];
+            photoImageEl.src = foto.imagem;
+            currentQuestionEl.textContent = fotoAtual + 1;
+            
+            personMarkersEl.innerHTML = '';
+            respostas = {};
+            pessoasIdentificadas = [];
+            
+            foto.pessoas.forEach((pessoa, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'person-marker';
+                marker.innerHTML = `<span class="status"></span>Pessoa ${index + 1}`;
+                marker.dataset.index = index;
+                marker.onclick = () => selecionarPessoa(index, marker);
+                personMarkersEl.appendChild(marker);
+            });
+
+            nameInputEl.value = '';
+            nameInputEl.disabled = false;
+            submitButtonEl.disabled = true;
+            nextButtonEl.classList.add('hidden');
+            skipButtonEl.style.display = 'block';
+            skipWarningEl.classList.add('hidden');
+            instructionEl.classList.remove('hidden');
+            inputContainerEl.classList.remove('hidden');
+            pessoaAtualIndex = null;
+            
+            document.querySelectorAll('.person-marker').forEach(m => {
+                m.classList.remove('selected');
+            });
+        }
+
+        function selecionarPessoa(index, marker) {
+            if (respostas[index] !== undefined) return;
+            
+            pessoaAtualIndex = index;
+            
+            document.querySelectorAll('.person-marker').forEach(m => {
+                if (respostas[m.dataset.index] === undefined) {
+                    m.classList.remove('selected');
+                }
+            });
+            
+            marker.classList.add('selected');
+            submitButtonEl.disabled = nameInputEl.value.trim() === '';
+            nameInputEl.focus();
+        }
+
+        nameInputEl.addEventListener('input', () => {
+            submitButtonEl.disabled = nameInputEl.value.trim() === '';
+        });
+
+        nameInputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !submitButtonEl.disabled) {
+                verificarResposta();
+            }
+        });
+
+        submitButtonEl.onclick = verificarResposta;
+
+        function verificarResposta() {
+            const resposta = nameInputEl.value.trim();
+            if (resposta === '') return;
+            
+            let pessoaCorretaIndex = -1;
+            let nomeEncontrado = null;
+            
+            fotosParaJogar[fotoAtual].pessoas.forEach((nomesAceitos, index) => {
+                const encontrou = nomesAceitos.some(nome => 
+                    resposta.toLowerCase() === nome.toLowerCase()
+                );
+                if (encontrou) {
+                    pessoaCorretaIndex = index;
+                    nomeEncontrado = nomesAceitos[0];
+                }
+            });
+            
+            if (pessoaCorretaIndex !== -1 && pessoasIdentificadas.includes(pessoaCorretaIndex)) {
+                alert(`Você já identificou ${nomeEncontrado}! Tente outra pessoa.`);
+                nameInputEl.value = '';
+                return;
+            }
+            
+            if (pessoaCorretaIndex === -1) {
+                const tempMsg = document.createElement('div');
+                tempMsg.textContent = `✗ "${resposta}" não está nesta foto`;
+                tempMsg.style.cssText = 'color: #f87171; text-align: center; margin: 10px 0; font-weight: bold;';
+                personMarkersEl.parentElement.insertBefore(tempMsg, personMarkersEl);
+                
+                setTimeout(() => tempMsg.remove(), 2000);
+            } else {
+                const markerCorreto = document.querySelector(`[data-index="${pessoaCorretaIndex}"]`);
+                
+                markerCorreto.className = 'person-marker';
+                markerCorreto.classList.add('answered', 'correct');
+                markerCorreto.innerHTML = `<span class="status">✓</span>${nomeEncontrado}`;
+                markerCorreto.onclick = null;
+                
+                pessoasIdentificadas.push(pessoaCorretaIndex);
+                pontos++;
+                scoreEl.textContent = pontos;
+            }
+            
+            nameInputEl.value = '';
+            pessoaAtualIndex = null;
+            submitButtonEl.disabled = true;
+            
+            document.querySelectorAll('.person-marker').forEach(m => {
+                m.classList.remove('selected');
+            });
+            
+            const todasIdentificadas = pessoasIdentificadas.length === fotosParaJogar[fotoAtual].pessoas.length;
+            
+            if (todasIdentificadas) {
+                nameInputEl.disabled = true;
+                skipButtonEl.style.display = 'none';
+                if (fotoAtual < fotosParaJogar.length - 1) {
+                    nextButtonEl.classList.remove('hidden');
+                } else {
+                    setTimeout(mostrarResultadoFinal, 1500);
+                }
+            }
+        }
+
+        skipButtonEl.onclick = () => {
+            skipWarningEl.classList.remove('hidden');
+            instructionEl.classList.add('hidden');
+            inputContainerEl.classList.add('hidden');
+            skipButtonEl.style.display = 'none';
+        };
+
+        function cancelarPular() {
+            skipWarningEl.classList.add('hidden');
+            instructionEl.classList.remove('hidden');
+            inputContainerEl.classList.remove('hidden');
+            skipButtonEl.style.display = 'block';
+        }
+
+        function confirmarPular() {
+            // Revelar todas as respostas que faltam
+            fotosParaJogar[fotoAtual].pessoas.forEach((nomesAceitos, index) => {
+                if (!pessoasIdentificadas.includes(index)) {
+                    const marker = document.querySelector(`[data-index="${index}"]`);
+                    marker.className = 'person-marker';
+                    marker.classList.add('answered', 'skipped');
+                    marker.innerHTML = `<span class="status">👁️</span>${nomesAceitos[0]}`;
+                    marker.onclick = null;
+                }
+            });
+            
+            nameInputEl.disabled = true;
+            skipWarningEl.classList.add('hidden');
+            
+            if (fotoAtual < fotosParaJogar.length - 1) {
+                nextButtonEl.classList.remove('hidden');
+            } else {
+                setTimeout(mostrarResultadoFinal, 2000);
+            }
+        }
+
+        nextButtonEl.onclick = () => {
+            fotoAtual++;
+            carregarFoto();
+        };
+
+        function mostrarResultadoFinal() {
+            gameScreenEl.classList.add('hidden');
+            finalScreenEl.classList.remove('hidden');
+            
+            const totalPessoas = fotosParaJogar.reduce((acc, foto) => acc + foto.pessoas.length, 0);
+            finalScoreEl.textContent = `${pontos}/${totalPessoas}`;
+            
+            const porcentagem = (pontos / totalPessoas) * 100;
+            
+            if (porcentagem === 100) {
+                finalMessageEl.textContent = 'Perfeito! Já está preparada para o natal!';
+            } else if (porcentagem >= 70) {
+                finalMessageEl.textContent = 'Parabens! Ainda faltam alguns, mas você se saiu muito bem!';
+            } else if (porcentagem >= 50) {
+                finalMessageEl.textContent = 'Complicado... Vamos treinar mais?';
+            } else {
+                finalMessageEl.textContent = 'Pô, dificultei tanto assim? Tenta de novo!';
+            }
+        }
+
+        selecionarFotos();
+        carregarFoto();
+    </script>
+</body>
+</html>
